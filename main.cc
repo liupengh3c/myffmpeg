@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <iostream>
+#include <math.h>
 #include "dream.h"
 int strToInt(char* p)
 {
