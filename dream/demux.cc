@@ -1,6 +1,7 @@
 /*
 	将mp4文件解封装为h264+aac
 */
+#define __STDC_CONSTANT_MACROS
 #include "iostream"
 extern "C"
 {

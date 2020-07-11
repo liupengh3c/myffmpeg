@@ -2,6 +2,8 @@
 #include <iostream>
 #include <math.h>
 #include "dream.h"
+#define __STDC_CONSTANT_MACROS
+#define __STDC_FORMAT_MACROS
 int strToInt(char* p)
 {
 	int length = strlen(p);
