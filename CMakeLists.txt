@@ -14,6 +14,9 @@ message(${PROJECT_SOURCE_DIR})
 # 并将名称保存到 DIR_SRCS 变量
 aux_source_directory(. DIR_SRCS)
 
+# 添加 lib 子目录
+add_subdirectory(dream)
+
 # 指定生成目标
 add_executable(myffmpeg ${DIR_SRCS})
 
