@@ -7,7 +7,7 @@ extern "C"
 #include "libavformat/avformat.h"
 }
 
-int demux(char *filename)
+int demux(const char *filename)
 {
 	int ret;
 	int video_index= -1, audio_index = -1;
