@@ -32,6 +32,7 @@ int main (int argc, char **argv)
 	3. decode h264 to yuv420p.\n";
 	while (true)
 	{
+        int is_over = 0;
 		std::cout << msg << std::endl;
 		std::cout << "please select the number:";
 		std::cin >> input;
@@ -53,8 +54,15 @@ int main (int argc, char **argv)
 				break;
 			}
 			default:
+            {
+                is_over = 1;
 				break;
+            }
 		}
+        if (is_over)
+        {
+            break;
+        }
 	}
 
     return  0;
