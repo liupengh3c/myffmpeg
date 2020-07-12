@@ -24,8 +24,6 @@ int main (int argc, char **argv)
     int ret = 0;
     char input[5] = {};
 	int number = 0;
-
-    std::cout << avformat_configuration() << std::endl;
     std::string msg = "\n\nAll the funtions are:\n\
 	1. print ffmpeg build informations.\n\
 	2. demux mp4 to h264+aac/dts,you should input the mp4 path.\n\
