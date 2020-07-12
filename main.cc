@@ -1,9 +1,14 @@
 #include <stdio.h>
+#include <string.h>
 #include <iostream>
 #include <math.h>
 #include "dream.h"
 #define __STDC_CONSTANT_MACROS
 #define __STDC_FORMAT_MACROS
+extern "C"
+{
+    #include "libavformat/avformat.h"
+}
 int strToInt(char* p)
 {
 	int length = strlen(p);
@@ -19,6 +24,8 @@ int main (int argc, char **argv)
     int ret = 0;
     char input[5] = {};
 	int number = 0;
+
+    std::cout << avformat_configuration() << std::endl;
     std::string msg = "\n\nAll the funtions are:\n\
 	1. print ffmpeg informations.\n\
 	2. demux mp4 to h264+aac/dts,you should input the mp4 path.\n\
