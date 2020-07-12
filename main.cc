@@ -7,7 +7,7 @@
 #define __STDC_FORMAT_MACROS
 extern "C"
 {
-    #include "libavformat/avformat.h"
+    #include "libavcodec/avcodec.h"
 }
 int strToInt(char* p)
 {
@@ -27,7 +27,7 @@ int main (int argc, char **argv)
 
     std::cout << avformat_configuration() << std::endl;
     std::string msg = "\n\nAll the funtions are:\n\
-	1. print ffmpeg informations.\n\
+	1. print ffmpeg build informations.\n\
 	2. demux mp4 to h264+aac/dts,you should input the mp4 path.\n\
 	3. decode h264 to yuv420p.\n";
 	while (true)
@@ -38,7 +38,12 @@ int main (int argc, char **argv)
 		number = strToInt(input);
 		switch (number)
 		{
-			case 1:
+            case 1:
+            {
+                std::cout << avcodec_configuration() << std::endl;
+                break;
+            }
+			case 2:
 			{
 				std::cout << "please input the mp4 file path:";
 				std::string path;
