@@ -40,7 +40,7 @@ int main (int argc, char **argv)
 		{
             case 1:
             {
-                std::cout << avcodec_configuration() << std::endl;
+                std::cout << "\n\n" << avcodec_configuration() << std::endl;
                 break;
             }
 			case 2:
