@@ -5,7 +5,7 @@
 extern "C"
 {
 #endif
-    int demux(int a);
+    int demux(const char *filename);
 #ifdef __cplusplus
 }
 #endif

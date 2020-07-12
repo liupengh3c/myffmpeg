@@ -32,7 +32,6 @@ int main (int argc, char **argv)
 	3. decode h264 to yuv420p.\n";
 	while (true)
 	{
-        int a = 3;
 		std::cout << msg << std::endl;
 		std::cout << "please select the number:";
 		std::cin >> input;
@@ -44,7 +43,7 @@ int main (int argc, char **argv)
 				std::cout << "please input the mp4 file path:";
 				std::string path;
 				std::cin >> path;
-				demux(a);
+				demux(path.data());
 				break;
 			}
 			default:

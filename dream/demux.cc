@@ -7,7 +7,7 @@ extern "C"
 {
 #include "libavformat/avformat.h"
 
-    int demux(int a)
+    int demux(const char *filename)
     {
         int ret;
         int video_index= -1, audio_index = -1;
@@ -18,7 +18,7 @@ extern "C"
         AVFormatContext* ifmt_ctx = NULL,*video_fmt_ctx=NULL,*audio_fmt_ctx=NULL;
         AVStream* in_stream = NULL,*out_stream = NULL;
         AVPacket avpacket;
-        const char *filename = "testdata/toy3.mp4";
+
         h264_file.append(filename).append(".h264");
         //aac_file.append(filename).append(".aac");
 
