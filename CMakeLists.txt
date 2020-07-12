@@ -22,4 +22,4 @@ add_executable(myffmpeg ${DIR_SRCS})
 
 
 
-target_link_libraries(myffmpeg avdevice avfilter postproc avformat avcodec avutil stdc++ rt x264 dl vpx pthread opus mp3lame fdk-aac expat freetype z swresample swscale avutil m bz2 lzma dream)
+target_link_libraries(myffmpeg dream avdevice avfilter postproc avformat avcodec avutil stdc++ rt x264 dl vpx pthread opus mp3lame fdk-aac expat freetype z swresample swscale avutil m bz2 lzma)

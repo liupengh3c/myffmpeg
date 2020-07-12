@@ -7,7 +7,6 @@
 #define __STDC_FORMAT_MACROS
 extern "C"
 {
-    #include "libavformat/avformat.h"
     #include "libavcodec/avcodec.h"
 }
 int strToInt(char* p)
