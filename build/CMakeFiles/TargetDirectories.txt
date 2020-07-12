@@ -1,3 +1,0 @@
-/home/liupeng/study/myffmpeg/build/CMakeFiles/rebuild_cache.dir
-/home/liupeng/study/myffmpeg/build/CMakeFiles/myffmpeg.dir
-/home/liupeng/study/myffmpeg/build/CMakeFiles/edit_cache.dir
