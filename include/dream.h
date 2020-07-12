@@ -1,4 +1,4 @@
-
+#include "iostream"
 #ifndef DREAM_H
 #define DREAM_H
 #ifdef __cplusplus
@@ -6,6 +6,7 @@ extern "C"
 {
 #endif
     int demux(const char *filename);
+    int decode_video(std::string input_filename, std::string output_filename);
 #ifdef __cplusplus
 }
 #endif
