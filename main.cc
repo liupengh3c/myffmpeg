@@ -25,7 +25,6 @@ int main (int argc, char **argv)
     char input[5] = {};
 	int number = 0;
 
-    std::cout << avformat_configuration() << std::endl;
     std::string msg = "\n\nAll the funtions are:\n\
 	1. print ffmpeg informations.\n\
 	2. demux mp4 to h264+aac/dts,you should input the mp4 path.\n\
@@ -38,7 +37,12 @@ int main (int argc, char **argv)
 		number = strToInt(input);
 		switch (number)
 		{
-			case 1:
+            case 1:
+            {
+                std::cout << avformat_configuration() << std::endl;
+                break;
+            }
+			case 2:
 			{
 				std::cout << "please input the mp4 file path:";
 				std::string path;
