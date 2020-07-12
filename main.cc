@@ -41,7 +41,6 @@ int main (int argc, char **argv)
 		{
             case 1:
             {
-                std::cout << avformat_configuration() << std::endl;
                 std::cout << avcodec_configuration() << std::endl;
                 break;
             }
