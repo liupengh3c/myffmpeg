@@ -51,6 +51,18 @@ int main (int argc, char **argv)
 				demux(path.data());
 				break;
 			}
+            case 3:
+			{
+				std::cout << "please input the h264 file path:";
+				std::string h264;
+				std::string yuv420;
+				std::cin >> h264;
+
+				std::cout << "please input the yuv420p file path:";
+				std::cin >> yuv420;
+				decode_video(h264, yuv420);
+				break;
+			}
 			default:
             {
                 is_over = 1;
