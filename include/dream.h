@@ -7,6 +7,7 @@ extern "C"
 #endif
     int demux(const char *filename);
     int decode_video(std::string input_filename, std::string output_filename);
+    int decode_video2(std::string input_filename, std::string output_filename);
 #ifdef __cplusplus
 }
 #endif
