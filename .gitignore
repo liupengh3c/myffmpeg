@@ -1,4 +1,4 @@
 build/*
 !build/build.sh
-!build/toy3.mp4
+!build/toy.mp4
 .gitignore
