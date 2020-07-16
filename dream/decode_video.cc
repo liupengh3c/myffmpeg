@@ -11,7 +11,8 @@ extern "C"
 #include "libavformat/avformat.h"
 
 #define INBUF_SIZE 4096
-    int decode(AVCodecContext* dec_ctx, AVFrame* frame, AVPacket* pkt, FILE *f)
+    // 注意，必需定义为static类型，不同的文件中decode重名，会报错
+    static int decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt, FILE *f)
     {
         int ret = 0;
         ret = avcodec_send_packet(dec_ctx, pkt);
@@ -55,19 +56,19 @@ extern "C"
     {
         int ret = 0;
 
-        AVCodec* codec = NULL;
-        AVCodecContext* avcodec_ctx = NULL;
+        AVCodec *codec = NULL;
+        AVCodecContext *avcodec_ctx = NULL;
         AVPacket *pkt = NULL;
-        AVFrame* frame = NULL;
+        AVFrame *frame = NULL;
         // 解析器上下文
-        AVCodecParserContext* parser = NULL;
+        AVCodecParserContext *parser = NULL;
 
-        FILE* f_in = NULL;
-        FILE* f_out = NULL;
+        FILE *f_in = NULL;
+        FILE *f_out = NULL;
 
         uint8_t inbuf[INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
-        uint8_t* data;
-        size_t   data_size;
+        uint8_t *data;
+        size_t data_size;
 
         // alloc an avpacket && frame
         pkt = av_packet_alloc();
@@ -125,7 +126,7 @@ extern "C"
                 std::cout << "ret=" << ret << std::endl;
                 data += ret;
                 data_size -= ret;
-                
+
                 std::cout << "pkt_size=" << pkt->size << std::endl;
                 if (pkt->size)
                 {

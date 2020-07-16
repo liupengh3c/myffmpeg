@@ -8,10 +8,11 @@ extern "C"
 #define AUDIO_INBUF_SIZE 2048
 #define AUDIO_REFILL_THRESH 4096
 
-    int  decode(AVCodecContext* dec_ctx, AVPacket* pkt, AVFrame* frame, SwrContext *swr_ctx, FILE* outfile)
+    // 注意，必需定义为static类型，不同的文件中decode重名，会报错
+    static int decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame, SwrContext *swr_ctx, FILE *outfile)
     {
         int ret = 0, data_size = 0;
-        uint8_t** dst_data;
+        uint8_t **dst_data;
         int dst_linesize;
         ret = avcodec_send_packet(dec_ctx, pkt);
         if (ret < 0)
@@ -21,7 +22,7 @@ extern "C"
         while (ret >= 0)
         {
             ret = avcodec_receive_frame(dec_ctx, frame);
-            
+
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             {
                 return 0;
@@ -36,9 +37,8 @@ extern "C"
             int unpadded_linesize = frame->nb_samples * av_get_bytes_per_sample(AVSampleFormat(frame->format));
             av_samples_alloc_array_and_samples(&dst_data, &dst_linesize, av_get_channel_layout_nb_channels(frame->channel_layout), frame->nb_samples, AVSampleFormat(frame->format), 0);
 
-            swr_convert(swr_ctx, dst_data, frame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
+            swr_convert(swr_ctx, dst_data, frame->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
             fwrite(dst_data[0], 1, unpadded_linesize, outfile);
-
         }
         return 0;
     }
@@ -47,21 +47,21 @@ extern "C"
     {
         int ret = 0;
         uint8_t inbuf[AUDIO_INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
-        uint8_t* data;
+        uint8_t *data;
         size_t data_size;
 
-        FILE* f_in = NULL, * f_out = NULL;
+        FILE *f_in = NULL, *f_out = NULL;
 
-        AVCodec* codec = NULL;
-        AVCodecContext* codec_ctx = NULL;
-        
-        AVFormatContext* fmt_ctx = NULL;
+        AVCodec *codec = NULL;
+        AVCodecContext *codec_ctx = NULL;
 
-        AVPacket* pkt = NULL;
-        AVFrame* frame = NULL;
+        AVFormatContext *fmt_ctx = NULL;
 
-        AVCodecParserContext* parser = NULL;
-        SwrContext* swr_ctx = NULL;
+        AVPacket *pkt = NULL;
+        AVFrame *frame = NULL;
+
+        AVCodecParserContext *parser = NULL;
+        SwrContext *swr_ctx = NULL;
 
         pkt = av_packet_alloc();
         frame = av_frame_alloc();
@@ -84,7 +84,6 @@ extern "C"
             return -2;
         }
 
-
         // 3.allocate decode context
         codec_ctx = avcodec_alloc_context3(codec);
         if (!codec_ctx)
@@ -92,7 +91,6 @@ extern "C"
             std::cout << "avcodec_alloc_context3 error,ret=" << ret << std::endl;
             return -3;
         }
-
 
         // 4.打开输入、输出文件
         f_in = fopen(input_filename.data(), "rb");
@@ -158,18 +156,17 @@ extern "C"
                 data_size -= ret;
                 if (pkt->size)
                 {
-                    decode(codec_ctx, pkt, frame, swr_ctx,f_out);
+                    decode(codec_ctx, pkt, frame, swr_ctx, f_out);
                 }
                 av_packet_unref(pkt);
             }
         }
 
-
         pkt->data = NULL;
         pkt->size = 0;
 
         // flush the decoder
-        decode(codec_ctx, NULL, frame, swr_ctx,f_out);
+        decode(codec_ctx, NULL, frame, swr_ctx, f_out);
 
         fclose(f_in);
         fclose(f_out);

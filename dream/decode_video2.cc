@@ -7,7 +7,8 @@ extern "C"
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 
-    int decode(AVCodecContext* ctx, AVPacket* pkt, AVFrame* frame, FILE* f)
+    // 注意，必需定义为static类型，不同的文件中decode重名，会报错
+    static int decode(AVCodecContext *ctx, AVPacket *pkt, AVFrame *frame, FILE *f)
     {
         int ret = 0;
         ret = avcodec_send_packet(ctx, pkt);
@@ -49,19 +50,19 @@ extern "C"
     int decode_video2(std::string input_filename, std::string output_filename)
     {
         int ret = 0;
-        FILE* f_out = NULL;
+        FILE *f_out = NULL;
 
-        AVFormatContext* ifmt_ctx = NULL, * ofmt_ctx = NULL;
-        AVCodec* codec = NULL;
-        AVCodecContext* codec_ctx = NULL;
+        AVFormatContext *ifmt_ctx = NULL, *ofmt_ctx = NULL;
+        AVCodec *codec = NULL;
+        AVCodecContext *codec_ctx = NULL;
 
-        AVPacket* pkt = NULL;
-        AVFrame* frame = NULL;
+        AVPacket *pkt = NULL;
+        AVFrame *frame = NULL;
 
         f_out = fopen(output_filename.data(), "wb+");
 
         pkt = av_packet_alloc();
-        
+
         frame = av_frame_alloc();
 
         // 1、打开多媒体文件
@@ -80,7 +81,6 @@ extern "C"
         }
         av_dump_format(ifmt_ctx, 0, input_filename.data(), 0);
 
-
         // 2、find解码器
         codec = avcodec_find_decoder(AV_CODEC_ID_H264);
         if (codec == NULL)
@@ -88,7 +88,6 @@ extern "C"
             std::cout << "avcodec_find_decoder(AV_CODEC_ID_H264) error" << std::endl;
             return -1;
         }
-
 
         // 3、分配解码器上下文
         codec_ctx = avcodec_alloc_context3(codec);
@@ -107,7 +106,6 @@ extern "C"
                 break;
             }
         }
-
 
         // 5、open解码器
         ret = avcodec_open2(codec_ctx, codec, NULL);

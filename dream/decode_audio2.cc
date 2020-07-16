@@ -6,10 +6,11 @@ extern "C"
 #include "libavformat/avformat.h"
 #include "libswresample/swresample.h"
 
-    int decode(AVCodecContext* dec_ctx, AVPacket* pkt, AVFrame* frame, SwrContext* swr_ctx, FILE* outfile)
+    // 注意，必需定义为static类型，不同的文件中decode重名，会报错
+    static int decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *frame, SwrContext *swr_ctx, FILE *outfile)
     {
         int ret = 0, data_size = 0;
-        uint8_t** dst_data;
+        uint8_t **dst_data;
         int dst_linesize;
         ret = avcodec_send_packet(dec_ctx, pkt);
         if (ret < 0)
@@ -19,7 +20,7 @@ extern "C"
         while (ret >= 0)
         {
             ret = avcodec_receive_frame(dec_ctx, frame);
-            
+
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             {
                 return 0;
@@ -35,9 +36,8 @@ extern "C"
             int unpadded_linesize = frame->nb_samples * av_get_bytes_per_sample(AVSampleFormat(frame->format));
             av_samples_alloc_array_and_samples(&dst_data, &dst_linesize, av_get_channel_layout_nb_channels(frame->channel_layout), frame->nb_samples, AVSampleFormat(frame->format), 0);
 
-            swr_convert(swr_ctx, dst_data, frame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
+            swr_convert(swr_ctx, dst_data, frame->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
             fwrite(dst_data[0], 1, unpadded_linesize, outfile);
-
         }
         return 0;
     }
@@ -45,16 +45,16 @@ extern "C"
     int decode_audio2(std::string input_filename, std::string output_filename)
     {
         int ret = 0;
-        FILE* f_out = NULL;
+        FILE *f_out = NULL;
 
-        AVFormatContext* fmt_ctx = NULL;
-        AVFrame* frame = NULL;
-        AVPacket* pkt = NULL;
+        AVFormatContext *fmt_ctx = NULL;
+        AVFrame *frame = NULL;
+        AVPacket *pkt = NULL;
 
-        AVCodec* codec = NULL;
-        AVCodecContext* decode_ctx = NULL;
+        AVCodec *codec = NULL;
+        AVCodecContext *decode_ctx = NULL;
 
-        SwrContext* swr_ctx = NULL;
+        SwrContext *swr_ctx = NULL;
 
         frame = av_frame_alloc();
         pkt = av_packet_alloc();
