@@ -1,3 +1,6 @@
+/*
+利用av_read_frame解码mp4
+*/
 #include "iostream"
 extern "C"
 {
