@@ -28,7 +28,10 @@ int main (int argc, char **argv)
     std::string msg = "\n\nAll the funtions are:\n\
 	1. print ffmpeg informations.\n\
 	2. demux mp4 to h264+aac/dts,you should input the mp4 path.\n\
-	3. decode h264 to yuv420p.\n";
+	3. decode h264 to yuv420p(av_parser_parser2).\n\
+	4. decode h264/mp4 to yuv420p(av_read_frame).\n\
+	5. decode aac to pcm(av_parser_parser2).\n\
+	6. decode aac/mp4 to pcm(av_read_frame).\n";
 	while (true)
 	{
         int is_over = 0;
@@ -61,6 +64,42 @@ int main (int argc, char **argv)
 				std::cout << "please input the yuv420p file path:";
 				std::cin >> yuv420;
 				decode_video(h264, yuv420);
+				break;
+			}
+            case 4:
+			{
+				std::cout << "please input the media file path:";
+				std::string h264;
+				std::string yuv420;
+				std::cin >> h264;
+
+				std::cout << "please input the yuv420p file path:";
+				std::cin >> yuv420;
+				decode_video2(h264, yuv420);
+				break;
+			}
+            case 5:
+			{
+				std::cout << "please input the aac file path:";
+				std::string dts;
+				std::string pcm;
+				std::cin >> dts;
+
+				std::cout << "please input the pcm file path:";
+				std::cin >> pcm;
+				decode_audio(dts, pcm);
+				break;
+			}
+            case 6:
+			{
+				std::cout << "please input the media file path:";
+				std::string aac;
+				std::string pcm;
+				std::cin >> aac;
+
+				std::cout << "please input the pcm file path:";
+				std::cin >> pcm;
+				decode_audio2(aac, pcm);
 				break;
 			}
 			default:
