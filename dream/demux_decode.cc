@@ -6,7 +6,7 @@ extern "C"
 #include "libavformat/avformat.h"
 #include "libswresample/swresample.h"
 
-    int decode(AVCodecContext* dec_ctx, AVPacket* pkt, AVFrame* frame, SwrContext* swr_ctx, FILE* audio_file, FILE *video_file)
+    static int decode(AVCodecContext* dec_ctx, AVPacket* pkt, AVFrame* frame, SwrContext* swr_ctx, FILE* audio_file, FILE *video_file)
     {
         int ret = 0, data_size = 0;
         uint8_t** dst_data;
