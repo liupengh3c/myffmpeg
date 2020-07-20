@@ -11,6 +11,7 @@ extern "C"
     int decode_audio(std::string input_filename, std::string output_filename);
     int decode_audio2(std::string input_filename, std::string output_filename);
     int demux_decode(std::string input_file, std::string video_file, std::string audio_file);
+    int encode_video(std::string input_file, std::string output_file);
 #ifdef __cplusplus
 }
 #endif

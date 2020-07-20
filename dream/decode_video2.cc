@@ -1,6 +1,7 @@
 /*
 利用av_read_frame解码mp4
 */
+#include <sys/time.h>
 #include "iostream"
 extern "C"
 {
@@ -59,10 +60,16 @@ extern "C"
         AVPacket *pkt = NULL;
         AVFrame *frame = NULL;
 
+        struct timeval tv;
+        int64_t istart = 0, iend = 0;
+
+        // 记录开始时间,确定cuda加速情况
+        gettimeofday(&tv, NULL);
+        istart = tv.tv_sec * 1000000 + tv.tv_usec;
+
         f_out = fopen(output_filename.data(), "wb+");
 
         pkt = av_packet_alloc();
-
         frame = av_frame_alloc();
 
         // 1、打开多媒体文件
@@ -82,13 +89,19 @@ extern "C"
         av_dump_format(ifmt_ctx, 0, input_filename.data(), 0);
 
         // 2、find解码器
+        // codec = avcodec_find_decoder_by_name("h264_cuvid");
         codec = avcodec_find_decoder(AV_CODEC_ID_H264);
-        if (codec == NULL)
+        if (!codec)
         {
-            std::cout << "avcodec_find_decoder(AV_CODEC_ID_H264) error" << std::endl;
-            return -1;
+            if (!codec)
+            {
+                codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+                std::cout << "avcodec_find_decoder(AV_CODEC_ID_H264) error" << std::endl;
+                return -1;
+            }
+            std::cout << "find decode cpu." << std::endl;
         }
-
+        std::cout << "find decode gpu hardware." << std::endl;
         // 3、分配解码器上下文
         codec_ctx = avcodec_alloc_context3(codec);
         if (codec_ctx == NULL)
@@ -106,7 +119,8 @@ extern "C"
                 break;
             }
         }
-
+        codec_ctx->pkt_timebase.den = 25;
+        codec_ctx->pkt_timebase.num = 1;
         // 5、open解码器
         ret = avcodec_open2(codec_ctx, codec, NULL);
         if (ret < 0)
@@ -117,6 +131,8 @@ extern "C"
 
         while (av_read_frame(ifmt_ctx, pkt) >= 0)
         {
+            std::cout << "den = " << codec_ctx->pkt_timebase.den << std::endl;
+            std::cout << "num = " << codec_ctx->pkt_timebase.num << std::endl;
             // 如果是视频
             if (ifmt_ctx->streams[pkt->stream_index]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
@@ -137,6 +153,10 @@ extern "C"
         av_frame_free(&frame);
         fclose(f_out);
 
+        gettimeofday(&tv, NULL);
+        iend = tv.tv_sec * 1000000 + tv.tv_usec;
+
+        std::cout << "decode yuv(1280*720,duration: " << ifmt_ctx->duration << ", cost time:" << iend - istart << std::endl;
         return 0;
     }
 }
