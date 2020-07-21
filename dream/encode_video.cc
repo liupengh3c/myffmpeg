@@ -11,7 +11,7 @@ extern "C"
 #define BIT_RATE 2000000
 #define PIX_FMT AV_PIX_FMT_YUV420P
 
-    int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, FILE *outfile)
+    static int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, FILE *outfile)
     {
         int ret = 0;
         if (frame)

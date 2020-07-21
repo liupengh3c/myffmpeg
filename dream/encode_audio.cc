@@ -8,7 +8,7 @@ extern "C"
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 
-    int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, FILE *outfile)
+    static int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, FILE *outfile)
     {
         int ret = 0;
         if (frame)
