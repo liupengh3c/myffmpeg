@@ -1,6 +1,6 @@
 
 #include "iostream"
-#define BIT_RATE 48000
+#define SAMPLE_RATE 48000
 #define SAMPLE_FMT AV_SAMPLE_FMT_S16
 #define CH_LAYOUT AV_CH_LAYOUT_STERO
 extern "C"
@@ -43,7 +43,28 @@ extern "C"
     int encode_audio(std::string input_file, std::string output_file)
     {
         int ret = 0;
+        FILE *f_in = NULL;
+        FILE *f_out = NULL;
 
         AVCodec *codec = NULL;
+        AVCodecContext *enc_ctx = NULL;
+
+        AVFrame *frame = NULL;
+        AVPacket *pkt = NULL;
+
+        // 1. find encoder
+        codec = avcodec_find_encoder(AV_CODEC_ID_AAC);
+        if (!codec)
+        {
+            std::cout << "find encoder error" << std::endl;
+            return -1;
+        }
+        enc_ctx = avcodec_alloc_context3(codec);
+        if (!codec)
+        {
+            std::cout << "avcodec_alloc_context3 error" << std::endl;
+            return -2;
+        }
+        enc_ctx->sample_rate = SAMPLE_RATE;
     }
 }
