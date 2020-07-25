@@ -35,7 +35,8 @@ int main(int argc, char **argv)
 	7. demux and decode mp4 to pcm + yuv420p.\n\
 	8. encode yuv420p to h264(fwrite).\n\
 	9. encode yuv420p to h264(av_interleaved_write_frame).\n\
-	10. encode pcm to aac.\n";
+	10. encode pcm to aac.\n\
+    11. press 'q' for quit applation.\n";
     while (true)
     {
         int is_over = 0;
