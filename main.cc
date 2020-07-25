@@ -33,7 +33,8 @@ int main(int argc, char **argv)
 	5. decode aac to pcm(av_parser_parser2).\n\
 	6. decode aac/mp4 to pcm(av_read_frame).\n\
 	7. demux and decode mp4 to pcm + yuv420p.\n\
-	8. encode yuv420p to h264.\n";
+	8. encode yuv420p to h264.\n\
+	9. encode pcm to aac.\n";
     while (true)
     {
         int is_over = 0;
@@ -132,6 +133,19 @@ int main(int argc, char **argv)
             std::cout << "please input the h264 file path:";
             std::cin >> h264;
             encode_video(yuv, h264);
+            break;
+        }
+        case 9:
+        {
+            std::string pcm;
+            std::string aac;
+
+            std::cout << "please input the pcm file path:";
+            std::cin >> pcm;
+
+            std::cout << "please input the aac file path:";
+            std::cin >> aac;
+            encode_audio(pcm, aac);
             break;
         }
         default:
