@@ -130,18 +130,24 @@ extern "C"
         if (ret < 0)
         {
             std::cout << "avcodec_parameters_from_context error,ret=" << ret << std::endl;
-            return -5;
+            return -6;
         }
 
         // 11. 写header
-        avformat_write_header(fmt_ctx, NULL);
+        ret = avformat_write_header(fmt_ctx, NULL);
+        if (ret < 0)
+        {
+            std::cout << "write header for output file error,ret=" << ret << std::endl;
+            return -7;
+        }
+
         while (!feof(f_in))
         {
             ret = av_frame_make_writable(frame);
             if (ret < 0)
             {
                 std::cout << "av_frame_make_writable error,ret=" << ret << std::endl;
-                return -4;
+                return -8;
             }
 
             // 读Y分量
