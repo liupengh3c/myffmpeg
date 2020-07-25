@@ -58,7 +58,7 @@ extern "C"
         pkt = av_packet_alloc();
 
         // 1. find encoder
-        //codec = avcodec_find_encoder(AV_CODEC_ID_AAC);
+        codec = avcodec_find_encoder(AV_CODEC_ID_AAC);
         if (!codec)
         {
             std::cout << "find encoder aac error" << std::endl;
