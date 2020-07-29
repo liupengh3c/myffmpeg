@@ -5,12 +5,18 @@ extern "C"
 #include "libavformat/avformat.h"
 #include "libavcodec/avcodec.h"
 #include "libavutil/time.h"
+#include "libswscale/swscale.h"
 
+#include <libavutil/imgutils.h>
+    AVFrame *frame = NULL, *yuv_frame = NULL;
+
+    struct SwsContext *sws_ctx = NULL;
     // 注意，必需定义为static类型，不同的文件中decode重名，会报错
     static int decode(AVCodecContext *ctx, AVPacket *pkt, AVFrame *frame, FILE *f)
     {
         int ret = 0;
         ret = avcodec_send_packet(ctx, pkt);
+
         if (ret < 0)
         {
             return -1;
@@ -26,23 +32,25 @@ extern "C"
             {
                 return -2;
             }
-            av_packet_unref(pkt);
+            // yuyv422 转 yuv420p
+            sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height, yuv_frame->data, yuv_frame->linesize);
+
             // 写Y分量
-            for (size_t i = 0; i < frame->height; i++)
+            for (size_t i = 0; i < yuv_frame->height; i++)
             {
-                fwrite(frame->data[0] + frame->linesize[0] * i, 1, frame->width, f);
+                fwrite(yuv_frame->data[0] + yuv_frame->linesize[0] * i, 1, yuv_frame->width, f);
             }
 
             // 写U分量
-            for (size_t i = 0; i < frame->height / 2; i++)
+            for (size_t i = 0; i < yuv_frame->height / 2; i++)
             {
-                fwrite(frame->data[1] + frame->linesize[1] * i, 1, frame->width / 2, f);
+                fwrite(yuv_frame->data[1] + yuv_frame->linesize[1] * i, 1, yuv_frame->width / 2, f);
             }
 
             // 写V分量
-            for (size_t i = 0; i < frame->height / 2; i++)
+            for (size_t i = 0; i < yuv_frame->height / 2; i++)
             {
-                fwrite(frame->data[2] + frame->linesize[2] * i, 1, frame->width / 2, f);
+                fwrite(yuv_frame->data[2] + yuv_frame->linesize[2] * i, 1, yuv_frame->width / 2, f);
             }
         }
         return 0;
@@ -58,14 +66,14 @@ extern "C"
         AVFormatContext *fmt_ctx = NULL;
         AVInputFormat *fmt = NULL;
         AVStream *stream = NULL;
-        AVFrame *frame = NULL;
+
         AVPacket *pkt = NULL;
 
         FILE *f_out = NULL;
         f_out = fopen("video.yuv", "wb+");
-
-        frame = av_frame_alloc();
         pkt = av_packet_alloc();
+        frame = av_frame_alloc();
+        yuv_frame = av_frame_alloc();
 
         // 1. 注册所有输入/输出设备，必须步骤
         avdevice_register_all();
@@ -137,7 +145,24 @@ extern "C"
             return -7;
         }
         std::cout << "stream->codecpar->codec_id=" << stream->codecpar->codec_id << std::endl;
+        std::cout << "dec_ctx->height=" << dec_ctx->height << std::endl;
+        std::cout << "dec_ctx->width=" << dec_ctx->width << std::endl;
+
+        // 9. 初始化转换器
+        sws_ctx = sws_getContext(dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt, dec_ctx->width, dec_ctx->height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
+        if (!sws_ctx)
+        {
+            std::cout << "sws_getContext fail,ret=" << ret << std::endl;
+            return -8;
+        }
+
+        yuv_frame->width = dec_ctx->width;
+        yuv_frame->height = dec_ctx->height;
+        yuv_frame->format = AV_PIX_FMT_YUV420P;
+        av_frame_get_buffer(yuv_frame, 0);
+
         start_time = av_gettime();
+
         while (true)
         {
             ret = av_read_frame(fmt_ctx, pkt);
@@ -150,16 +175,23 @@ extern "C"
             {
                 break;
             }
-            if (av_gettime() - start_time >= 5)
+            if (av_gettime() - start_time >= 10000000)
             {
                 break;
             }
-        }
-        // flush the decoder
-        decode(dec_ctx, NULL, frame, f_out);
-        avformat_close_input(&fmt_ctx);
-        avcodec_free_context(&dec_ctx);
 
+            av_packet_unref(pkt);
+        }
+        decode(dec_ctx, NULL, frame, f_out);
+        sws_freeContext(sws_ctx);
+
+        av_packet_free(&pkt);
+        av_frame_free(&frame);
+        av_frame_free(&yuv_frame);
+        avcodec_free_context(&dec_ctx);
+        avformat_close_input(&fmt_ctx);
+
+        fclose(f_out);
         return 0;
     }
 }
