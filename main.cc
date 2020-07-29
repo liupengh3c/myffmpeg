@@ -26,17 +26,18 @@ int main(int argc, char **argv)
     int number = 0;
 
     std::string msg = "\n\nAll the funtions are:\n\
-	1. print ffmpeg informations.\n\
-	2. demux mp4 to h264+aac/dts,you should input the mp4 path.\n\
-	3. decode h264 to yuv420p(av_parser_parser2).\n\
-	4. decode h264/mp4 to yuv420p(av_read_frame).\n\
-	5. decode aac to pcm(av_parser_parser2).\n\
-	6. decode aac/mp4 to pcm(av_read_frame).\n\
-	7. demux and decode mp4 to pcm + yuv420p.\n\
-	8. encode yuv420p to h264(fwrite).\n\
-	9. encode yuv420p to h264(av_interleaved_write_frame).\n\
-	10. encode pcm to aac.\n\
-    11. press 'q' for quit applation.\n";
+        1. print ffmpeg informations.\n\
+        2. demux mp4 to h264+aac/dts,you should input the mp4 path.\n\
+        3. decode h264 to yuv420p(av_parser_parser2).\n\
+        4. decode h264/mp4 to yuv420p(av_read_frame).\n\
+        5. decode aac to pcm(av_parser_parser2).\n\
+        6. decode aac/mp4 to pcm(av_read_frame).\n\
+        7. demux and decode mp4 to pcm + yuv420p.\n\
+        8. encode yuv420p to h264(fwrite).\n\
+        9. encode yuv420p to h264(av_interleaved_write_frame).\n\
+        10. encode pcm to aac.\n\
+        11. video.\n\
+        12. press 'q' for quit applation.\n";
     while (true)
     {
         int is_over = 0;
@@ -160,6 +161,11 @@ int main(int argc, char **argv)
             std::cout << "please input the aac file path:";
             std::cin >> aac;
             encode_audio(pcm, aac);
+            break;
+        }
+        case 11:
+        {
+            video();
             break;
         }
         default:
