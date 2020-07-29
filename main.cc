@@ -36,7 +36,7 @@ int main(int argc, char **argv)
         8. encode yuv420p to h264(fwrite).\n\
         9. encode yuv420p to h264(av_interleaved_write_frame).\n\
         10. encode pcm to aac.\n\
-        11. video.\n\
+        11. get webcam video to yuv420p.\n\
         12. press 'q' for quit applation.\n";
     while (true)
     {
@@ -165,7 +165,10 @@ int main(int argc, char **argv)
         }
         case 11:
         {
-            video();
+            std::cout << "please input the yuv file path:";
+            std::string yuv;
+            std::cin >> yuv;
+            video(yuv);
             break;
         }
         default:

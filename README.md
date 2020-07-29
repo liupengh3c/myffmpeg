@@ -21,6 +21,7 @@ All the funtions are:
 	8. encode yuv420p to h264(fwrite).  
 	9. encode yuv420p to h264(av_interleaved_write_frame).  
 	10. encode pcm to aac.  
-        11. press 'q' for quit applation.  
+	11. get webcam video to yuv420p.  
+    12. press 'q' for quit applation.  
 
 please select the number:  

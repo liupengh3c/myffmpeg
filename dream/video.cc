@@ -55,7 +55,7 @@ extern "C"
         }
         return 0;
     }
-    int video()
+    int video(std::string yuv)
     {
         int ret = 0;
         int video_index = -1;
@@ -70,7 +70,7 @@ extern "C"
         AVPacket *pkt = NULL;
 
         FILE *f_out = NULL;
-        f_out = fopen("video.yuv", "wb+");
+        f_out = fopen(yuv.data(), "wb+");
         pkt = av_packet_alloc();
         frame = av_frame_alloc();
         yuv_frame = av_frame_alloc();

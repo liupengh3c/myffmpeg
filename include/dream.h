@@ -14,7 +14,7 @@ extern "C"
     int encode_video(std::string input_file, std::string output_file);
     int encode_video2(std::string input_file, std::string output_file);
     int encode_audio(std::string input_file, std::string output_file);
-    int video();
+    int video(std::string yuv);
 #ifdef __cplusplus
 }
 #endif
