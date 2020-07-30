@@ -1,4 +1,6 @@
 #include "iostream"
+
+#include "SDL2/SDL.h"
 extern "C"
 {
 #include "libavdevice/avdevice.h"
@@ -9,8 +11,14 @@ extern "C"
 
 #include <libavutil/imgutils.h>
     AVFrame *frame = NULL, *yuv_frame = NULL;
-
     struct SwsContext *sws_ctx = NULL;
+
+    //SDL---------------------------
+    SDL_Window *screen;
+    SDL_Renderer *sdlRenderer;
+    SDL_Texture *sdlTexture;
+    SDL_Rect sdlRect;
+
     // 注意，必需定义为static类型，不同的文件中decode重名，会报错
     static int decode(AVCodecContext *ctx, AVPacket *pkt, AVFrame *frame, FILE *f)
     {
@@ -52,6 +60,16 @@ extern "C"
             {
                 fwrite(yuv_frame->data[2] + yuv_frame->linesize[2] * i, 1, yuv_frame->width / 2, f);
             }
+            SDL_UpdateYUVTexture(sdlTexture, &sdlRect,
+                                 yuv_frame->data[0], yuv_frame->linesize[0],
+                                 yuv_frame->data[1], yuv_frame->linesize[1],
+                                 yuv_frame->data[2], yuv_frame->linesize[2]);
+            SDL_RenderClear(sdlRenderer);
+            SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, &sdlRect);
+            SDL_RenderPresent(sdlRenderer);
+            //SDL End-----------------------
+            //Delay 40ms
+            // SDL_Delay(40);
         }
         return 0;
     }
@@ -70,6 +88,7 @@ extern "C"
         AVPacket *pkt = NULL;
 
         FILE *f_out = NULL;
+
         f_out = fopen(yuv.data(), "wb+");
         pkt = av_packet_alloc();
         frame = av_frame_alloc();
@@ -161,6 +180,25 @@ extern "C"
         yuv_frame->format = AV_PIX_FMT_YUV420P;
         av_frame_get_buffer(yuv_frame, 0);
 
+        // SDL初始化
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+        screen = SDL_CreateWindow("get yuv data from webcam", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                  dec_ctx->width, dec_ctx->height,
+                                  SDL_WINDOW_OPENGL);
+        if (!screen)
+        {
+            std::cout << "sdl create window fail" << std::endl;
+            return -9;
+        }
+
+        sdlRenderer = SDL_CreateRenderer(screen, -1, 0);
+        sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, dec_ctx->width, dec_ctx->height);
+
+        sdlRect.x = 0;
+        sdlRect.y = 0;
+        sdlRect.w = dec_ctx->width;
+        sdlRect.h = dec_ctx->height;
+
         start_time = av_gettime();
 
         while (true)
@@ -179,7 +217,7 @@ extern "C"
             {
                 break;
             }
-
+            std::cout << "pkt->pts=" << pkt->pts << std::endl;
             av_packet_unref(pkt);
         }
         decode(dec_ctx, NULL, frame, f_out);
@@ -192,6 +230,8 @@ extern "C"
         avformat_close_input(&fmt_ctx);
 
         fclose(f_out);
+
+        SDL_Quit();
         return 0;
     }
 }
