@@ -60,15 +60,17 @@ extern "C"
             {
                 fwrite(yuv_frame->data[2] + yuv_frame->linesize[2] * i, 1, yuv_frame->width / 2, f);
             }
+
+            // 设置纹理数据
             SDL_UpdateYUVTexture(sdlTexture, &sdlRect,
                                  yuv_frame->data[0], yuv_frame->linesize[0],
                                  yuv_frame->data[1], yuv_frame->linesize[1],
                                  yuv_frame->data[2], yuv_frame->linesize[2]);
-            SDL_RenderClear(sdlRenderer);
+            // SDL_RenderClear(sdlRenderer);
+            // 纹理复制给渲染器
             SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, &sdlRect);
+            // 显示
             SDL_RenderPresent(sdlRenderer);
-            //SDL End-----------------------
-            //Delay 40ms
             // SDL_Delay(40);
         }
         return 0;
@@ -78,6 +80,7 @@ extern "C"
         int ret = 0;
         int video_index = -1;
         int64_t start_time = 0;
+        int dst_width = 1280, dst_height = 960;
 
         AVCodecContext *dec_ctx = NULL;
         AVCodec *decodec = NULL;
@@ -168,22 +171,22 @@ extern "C"
         std::cout << "dec_ctx->width=" << dec_ctx->width << std::endl;
 
         // 9. 初始化转换器
-        sws_ctx = sws_getContext(dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt, dec_ctx->width, dec_ctx->height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
+        sws_ctx = sws_getContext(dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt, dst_width, dst_height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
         if (!sws_ctx)
         {
             std::cout << "sws_getContext fail,ret=" << ret << std::endl;
             return -8;
         }
 
-        yuv_frame->width = dec_ctx->width;
-        yuv_frame->height = dec_ctx->height;
+        yuv_frame->width = dst_width;
+        yuv_frame->height = dst_height;
         yuv_frame->format = AV_PIX_FMT_YUV420P;
         av_frame_get_buffer(yuv_frame, 0);
 
         // SDL初始化
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
         screen = SDL_CreateWindow("get yuv data from webcam", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                  dec_ctx->width, dec_ctx->height,
+                                  dst_width, dst_height,
                                   SDL_WINDOW_OPENGL);
         if (!screen)
         {
@@ -192,12 +195,12 @@ extern "C"
         }
 
         sdlRenderer = SDL_CreateRenderer(screen, -1, 0);
-        sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, dec_ctx->width, dec_ctx->height);
+        sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, dst_width, dst_height);
 
         sdlRect.x = 0;
         sdlRect.y = 0;
-        sdlRect.w = dec_ctx->width;
-        sdlRect.h = dec_ctx->height;
+        sdlRect.w = dst_width;
+        sdlRect.h = dst_height;
 
         start_time = av_gettime();
 
