@@ -37,7 +37,8 @@ int main(int argc, char **argv)
         9. encode yuv420p to h264(av_interleaved_write_frame).\n\
         10. encode pcm to aac.\n\
         11. get webcam video to yuv420p.\n\
-        12. press 'q' for quit applation.\n";
+        12. get webcam video and push it to rtmp server.\n\
+        13. press 'q' for quit applation.\n";
     while (true)
     {
         int is_over = 0;
@@ -169,6 +170,14 @@ int main(int argc, char **argv)
             std::string yuv;
             std::cin >> yuv;
             video(yuv);
+            break;
+        }
+        case 12:
+        {
+            std::cout << "please input the flv file path:";
+            std::string flv;
+            std::cin >> flv;
+            rtmp_video(flv);
             break;
         }
         default:

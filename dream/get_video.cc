@@ -80,7 +80,7 @@ extern "C"
         int ret = 0;
         int video_index = -1;
         int64_t start_time = 0;
-        int dst_width = 1280, dst_height = 960;
+        int dst_width = 640, dst_height = 480;
 
         AVCodecContext *dec_ctx = NULL;
         AVCodec *decodec = NULL;
