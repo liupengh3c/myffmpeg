@@ -19,8 +19,8 @@ extern "C"
         SDL_Texture *sdlTexture;
         SDL_Rect sdlRect;
     };
-
-    static int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, AVFormatContext *fmt, FILE *f)
+    AVStream *istream = NULL, *ostream = NULL;
+    static int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, AVFormatContext *fmt, int index, FILE *f)
     {
         int ret = 0;
         if (frame)
@@ -48,8 +48,15 @@ extern "C"
                 std::cout << "avcodec_receive_packet error,ret=" << ret << std::endl;
                 return -2;
             }
+
             fwrite(pkt->data, 1, pkt->size, f);
-            pkt->stream_index = 0;
+            // pkt->stream_index = 0;
+            pkt->pts = av_rescale_q(index, {1, 30}, ostream->time_base);
+            pkt->dts = pkt->pts;
+            std::cout << "index = " << index << std::endl;
+            std::cout << "ostream->time_base.den = " << ostream->time_base.den << std::endl;
+            std::cout << "ostream->time_base.num = " << ostream->time_base.num << std::endl;
+            std::cout << "pkt->pts = " << pkt->pts << std::endl;
             av_interleaved_write_frame(fmt, pkt);
             av_packet_unref(pkt);
         }
@@ -66,7 +73,6 @@ extern "C"
         AVInputFormat *fmt = NULL;
 
         AVFormatContext *ofmt_ctx = NULL;
-        AVStream *istream = NULL, *ostream = NULL;
 
         AVPacket *pkt = NULL;
 
@@ -87,6 +93,7 @@ extern "C"
 
         // 1. 注册所有输入/输出设备，必须步骤
         avdevice_register_all();
+        avformat_network_init();
 
         // 2. find input format
         fmt = av_find_input_format("v4l2");
@@ -129,6 +136,7 @@ extern "C"
         }
 
         codec = avcodec_find_encoder_by_name("h264_nvenc");
+        // codec = avcodec_find_encoder(AV_CODEC_ID_H264);
         if (!codec)
         {
             std::cout << "avcodec_find_encoder_by_name h264_nvenc fail" << std::endl;
@@ -144,9 +152,13 @@ extern "C"
         enc_ctx->width = dst_width;
         enc_ctx->height = dst_height;
         enc_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-        enc_ctx->framerate = {25, 1};
-        enc_ctx->time_base = {1, 25};
+        enc_ctx->framerate = {30, 1};
+        enc_ctx->time_base = {1, 30};
         enc_ctx->bit_rate = 4000000;
+        enc_ctx->rc_min_rate = 4000000;
+        enc_ctx->rc_max_rate = 4000000;
+        enc_ctx->gop_size = 250;
+
         // 5. 获取视频流索引
         for (size_t i = 0; i < fmt_ctx->nb_streams; i++)
         {
@@ -156,6 +168,7 @@ extern "C"
             {
                 video_index = i;
                 avcodec_parameters_from_context(ostream->codecpar, enc_ctx);
+                std::cout << "ostream->codecpar->width=" << ostream->codecpar->width << std::endl;
                 break;
             }
         }
@@ -168,6 +181,7 @@ extern "C"
         std::cout << "-----------------------------------\n"
                   << std::endl;
         av_dump_format(ofmt_ctx, 0, rtmp_server, 1);
+
         // 写文件头
         ret = avformat_write_header(ofmt_ctx, NULL);
         if (ret < 0)
@@ -223,6 +237,7 @@ extern "C"
         AVPacket *opkt = NULL;
         opkt = av_packet_alloc();
         start_time = av_gettime();
+        int frame_index = 0;
 
         while (true)
         {
@@ -233,7 +248,9 @@ extern "C"
             }
             memcpy(frame->data[0], pkt->data, pkt->size);
             sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height, yuv_frame->data, yuv_frame->linesize);
-            encode(enc_ctx, opkt, yuv_frame, ofmt_ctx, f_out);
+            yuv_frame->pts = av_rescale_q(pkt->pts, istream->time_base, ostream->time_base);
+            encode(enc_ctx, opkt, yuv_frame, ofmt_ctx, frame_index, f_out);
+            frame_index++;
             // 设置纹理数据
             SDL_UpdateYUVTexture(display.sdlTexture, &display.sdlRect,
                                  yuv_frame->data[0], yuv_frame->linesize[0],
@@ -244,26 +261,26 @@ extern "C"
             SDL_RenderCopy(display.sdlRenderer, display.sdlTexture, NULL, &display.sdlRect);
             // 显示
             SDL_RenderPresent(display.sdlRenderer);
-            if (av_gettime() - start_time >= 30000000)
+            if (av_gettime() - start_time >= 10000000)
             {
                 break;
             }
-            AVRational time_base = istream->time_base;
-            AVRational time_base_q = {1, AV_TIME_BASE};
-            int64_t pts_time = av_rescale_q(pkt->pts, time_base, time_base_q);
-            int64_t now_time = av_gettime() - start_time;
-            if (pts_time > now_time)
-                av_usleep(pts_time - now_time);
+            // AVRational time_base = istream->time_base;
+            // AVRational time_base_q = {1, AV_TIME_BASE};
+            // int64_t pts_time = av_rescale_q(pkt->pts, time_base, time_base_q);
+            // int64_t now_time = av_gettime() - start_time;
+            // if (pts_time > now_time)
+            //     av_usleep(pts_time - now_time);
 
-            std::cout << "pts_time=" << pts_time << std::endl;
-            std::cout << "pkt->dts=" << pkt->dts << std::endl;
-            std::cout << "pkt->pts=" << pkt->pts << std::endl;
-            std::cout << "av_gettime() - start_time=" << av_gettime() - start_time << std::endl;
-            std::cout << "istream->time_base.den=" << istream->time_base.den << std::endl;
-            std::cout << "istream->time_base.num=" << istream->time_base.num << std::endl;
+            // std::cout << "pts_time=" << pts_time << std::endl;
+            // std::cout << "pkt->dts=" << pkt->dts << std::endl;
+            // std::cout << "pkt->pts=" << pkt->pts << std::endl;
+            // std::cout << "av_gettime() - start_time=" << av_gettime() - start_time << std::endl;
+            // std::cout << "istream->time_base.den=" << istream->time_base.den << std::endl;
+            // std::cout << "istream->time_base.num=" << istream->time_base.num << std::endl;
         }
 
-        encode(enc_ctx, opkt, NULL, ofmt_ctx, f_out);
+        encode(enc_ctx, opkt, NULL, ofmt_ctx, frame_index, f_out);
         av_write_trailer(ofmt_ctx);
 
         sws_freeContext(sws_ctx);

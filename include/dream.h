@@ -16,6 +16,7 @@ extern "C"
     int encode_audio(std::string input_file, std::string output_file);
     int video(std::string yuv);
     int rtmp_video(std::string flv);
+    int rtmp_video2(std::string flv);
 #ifdef __cplusplus
 }
 #endif

@@ -38,7 +38,8 @@ int main(int argc, char **argv)
         10. encode pcm to aac.\n\
         11. get webcam video to yuv420p.\n\
         12. get webcam video and push it to rtmp server.\n\
-        13. press 'q' for quit applation.\n";
+        13. read local file and push it to rtmp server.\n\
+        14. press 'q' for quit applation.\n";
     while (true)
     {
         int is_over = 0;
@@ -178,6 +179,14 @@ int main(int argc, char **argv)
             std::string flv;
             std::cin >> flv;
             rtmp_video(flv);
+            break;
+        }
+        case 13:
+        {
+            std::cout << "please input the flv file path(local):";
+            std::string flv;
+            std::cin >> flv;
+            rtmp_video2(flv);
             break;
         }
         default:
