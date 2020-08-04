@@ -23,12 +23,6 @@ extern "C"
     static int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, AVFormatContext *fmt, int index, FILE *f)
     {
         int ret = 0;
-        if (frame)
-        {
-            std::cout << "frame->linesize[0] = " << frame->linesize[0] << std::endl;
-            std::cout << "frame->linesize[1] = " << frame->linesize[1] << std::endl;
-            std::cout << "frame->linesize[2] = " << frame->linesize[2] << std::endl;
-        }
 
         ret = avcodec_send_frame(enc_ctx, frame);
         if (ret < 0)
@@ -49,16 +43,21 @@ extern "C"
                 return -2;
             }
 
-            fwrite(pkt->data, 1, pkt->size, f);
+            // fwrite(pkt->data, 1, pkt->size, f);
             // pkt->stream_index = 0;
             pkt->pts = av_rescale_q(index, {1, 30}, ostream->time_base);
             pkt->dts = pkt->pts;
-            std::cout << "index = " << index << std::endl;
-            std::cout << "ostream->time_base.den = " << ostream->time_base.den << std::endl;
-            std::cout << "ostream->time_base.num = " << ostream->time_base.num << std::endl;
+
+            std::cout << "index = " << fmt->streams[0]->codecpar->width << std::endl;
+            // std::cout << "ostream->time_base.den = " << ostream->time_base.den << std::endl;
+            // std::cout << "ostream->time_base.num = " << ostream->time_base.num << std::endl;
             std::cout << "pkt->pts = " << pkt->pts << std::endl;
-            av_interleaved_write_frame(fmt, pkt);
+            ret = av_interleaved_write_frame(fmt, pkt);
             av_packet_unref(pkt);
+            if (ret < 0)
+            {
+                std::cout << "av_interleaved_write_frame error,ret=" << ret << std::endl;
+            }
         }
         return 0;
     }
@@ -69,7 +68,7 @@ extern "C"
         int64_t start_time = 0;
         int dst_width = 640, dst_height = 480;
 
-        AVFormatContext *fmt_ctx = NULL;
+        AVFormatContext *ifmt_ctx = NULL;
         AVInputFormat *fmt = NULL;
 
         AVFormatContext *ofmt_ctx = NULL;
@@ -93,10 +92,9 @@ extern "C"
 
         // 1. 注册所有输入/输出设备，必须步骤
         avdevice_register_all();
-        avformat_network_init();
 
         // 2. find input format
-        fmt = av_find_input_format("v4l2");
+        fmt = av_find_input_format("video4linux2");
         if (!fmt)
         {
             std::cout << "find input format error" << std::endl;
@@ -104,7 +102,7 @@ extern "C"
         }
 
         // 3. 打开摄像头
-        ret = avformat_open_input(&fmt_ctx, "/dev/video0", fmt, NULL);
+        ret = avformat_open_input(&ifmt_ctx, "/dev/video0", fmt, NULL);
         if (ret < 0)
         {
             std::cout << "avformat_open_input error,ret=" << ret << std::endl;
@@ -112,13 +110,13 @@ extern "C"
         }
 
         // 4. 查找流信息
-        ret = avformat_find_stream_info(fmt_ctx, NULL);
+        ret = avformat_find_stream_info(ifmt_ctx, NULL);
         if (ret < 0)
         {
             std::cout << "avformat_find_stream_info error,ret=" << ret << std::endl;
             return -3;
         }
-        av_dump_format(fmt_ctx, 0, "/dev/video0", 0);
+        av_dump_format(ifmt_ctx, 0, "/dev/video0", 0);
 
         // 为输出文件分配avformat_context
         avformat_alloc_output_context2(&ofmt_ctx, NULL, "flv", rtmp_server);
@@ -127,20 +125,17 @@ extern "C"
             std::cout << "avformat_alloc_output_context2 for output file error,ret=" << std::endl;
             return -4;
         }
-        // 打开输出文件
-        ret = avio_open(&ofmt_ctx->pb, rtmp_server, AVIO_FLAG_WRITE);
-        if (ret < 0)
-        {
-            std::cout << "open output file error,ret=" << ret << std::endl;
-            return -5;
-        }
 
         codec = avcodec_find_encoder_by_name("h264_nvenc");
-        // codec = avcodec_find_encoder(AV_CODEC_ID_H264);
         if (!codec)
         {
-            std::cout << "avcodec_find_encoder_by_name h264_nvenc fail" << std::endl;
-            return -7;
+            codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+            if (!codec)
+            {
+                std::cout << "avcodec_find_encoder_by_name h264_nvenc fail" << std::endl;
+                return -7;
+            }
+            enc_ctx->codec_id = AV_CODEC_ID_H264;
         }
 
         enc_ctx = avcodec_alloc_context3(codec);
@@ -149,26 +144,30 @@ extern "C"
             std::cout << "avcodec_alloc_context3 fail" << std::endl;
             return -8;
         }
-        enc_ctx->width = dst_width;
-        enc_ctx->height = dst_height;
-        enc_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-        enc_ctx->framerate = {30, 1};
-        enc_ctx->time_base = {1, 30};
-        enc_ctx->bit_rate = 4000000;
-        enc_ctx->rc_min_rate = 4000000;
-        enc_ctx->rc_max_rate = 4000000;
-        enc_ctx->gop_size = 250;
 
-        // 5. 获取视频流索引
-        for (size_t i = 0; i < fmt_ctx->nb_streams; i++)
+        enc_ctx->bit_rate = 4000000;
+        enc_ctx->width = 640;
+        enc_ctx->height = 480;
+        enc_ctx->time_base = (AVRational){1, 30};
+        enc_ctx->gop_size = 12;
+        enc_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
+        if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
         {
-            istream = fmt_ctx->streams[i];
+            enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+            std::cout << "enter****************************" << std::endl;
+        }
+        // 5. 获取视频流索引
+        for (size_t i = 0; i < ifmt_ctx->nb_streams; i++)
+        {
+            istream = ifmt_ctx->streams[i];
             ostream = avformat_new_stream(ofmt_ctx, NULL);
+            ostream->id = 0;
             if (istream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 video_index = i;
-                avcodec_parameters_from_context(ostream->codecpar, enc_ctx);
-                std::cout << "ostream->codecpar->width=" << ostream->codecpar->width << std::endl;
+                ret = avcodec_parameters_from_context(ostream->codecpar, enc_ctx);
+                ostream->avg_frame_rate = AVRational{30, 1};
+                ostream->time_base = (AVRational){1, 30};
                 break;
             }
         }
@@ -182,13 +181,6 @@ extern "C"
                   << std::endl;
         av_dump_format(ofmt_ctx, 0, rtmp_server, 1);
 
-        // 写文件头
-        ret = avformat_write_header(ofmt_ctx, NULL);
-        if (ret < 0)
-        {
-            std::cout << "avformat_write_header to file error,ret=" << ret << std::endl;
-            return -6;
-        }
         // 8. 打开解码器
         ret = avcodec_open2(enc_ctx, codec, NULL);
         if (ret < 0)
@@ -196,7 +188,21 @@ extern "C"
             std::cout << "avcodec_open2 fail,ret=" << ret << std::endl;
             return -10;
         }
+        // 打开输出文件
+        ret = avio_open(&ofmt_ctx->pb, rtmp_server, AVIO_FLAG_WRITE);
+        if (ret < 0)
+        {
+            std::cout << "open output file error,ret=" << ret << std::endl;
+            return -5;
+        }
 
+        // 写文件头
+        ret = avformat_write_header(ofmt_ctx, NULL);
+        if (ret < 0)
+        {
+            std::cout << "avformat_write_header to file error,ret=" << ret << std::endl;
+            return -6;
+        }
         // 9. 初始化转换器
         sws_ctx = sws_getContext(istream->codecpar->width, istream->codecpar->height, AVPixelFormat(istream->codecpar->format), dst_width, dst_height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
         if (!sws_ctx)
@@ -241,7 +247,7 @@ extern "C"
 
         while (true)
         {
-            ret = av_read_frame(fmt_ctx, pkt);
+            ret = av_read_frame(ifmt_ctx, pkt);
             if (ret < 0)
             {
                 break;
@@ -286,10 +292,11 @@ extern "C"
         sws_freeContext(sws_ctx);
 
         av_packet_free(&pkt);
+        av_packet_free(&opkt);
         av_frame_free(&frame);
         av_frame_free(&yuv_frame);
         avcodec_free_context(&enc_ctx);
-        avformat_close_input(&fmt_ctx);
+        avformat_close_input(&ifmt_ctx);
 
         avio_close(ofmt_ctx->pb);
         avformat_free_context(ofmt_ctx);

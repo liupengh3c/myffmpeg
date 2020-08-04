@@ -39,6 +39,7 @@ extern "C"
                 return -2;
             }
             std::cout << "Write packet " << pkt->pts << " size=" << pkt->size << std::endl;
+
             pkt->stream_index = 0;
             av_interleaved_write_frame(fmt, pkt);
             av_packet_unref(pkt);
