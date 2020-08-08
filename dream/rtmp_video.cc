@@ -81,7 +81,7 @@ extern "C"
         struct SwsContext *sws_ctx = NULL;
         struct SDL_Info display;
 
-        const char *rtmp_server = "rtmp://106.13.42.53/liupeng/video";
+        const char *rtmp_server = "rtmp://106.13.105.231:8234/liupeng/video";
         AVCodecContext *enc_ctx = NULL;
         AVCodec *codec = NULL;
 
