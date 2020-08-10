@@ -29,5 +29,5 @@ please select the number:
 # rtmp server
 搭建了rtmp server服务  
 地址：rtmp://106.13.105.231:8234/xxxx/xxxx(xxx随意替换)  
-可以通过：http://106.13.105.231:8000/admin/streams##， 这个地址查看所有的推流
+可以通过：http://106.13.105.231:8000/admin/streams## 这个地址查看所有的推流
 
