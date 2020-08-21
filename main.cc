@@ -38,7 +38,8 @@ int main(int argc, char **argv)
         10. encode pcm to aac.\n\
         11. get webcam video to yuv420p.\n\
         12. get webcam video and push it to rtmp server.\n\
-        13. press 'q' for quit applation.\n";
+        13. encode rgba file to mp4.\n\
+        14. press 'q' for quit applation.\n";
     // av_log_set_level(AV_LOG_TRACE);
     while (true)
     {
@@ -183,10 +184,13 @@ int main(int argc, char **argv)
         }
         case 13:
         {
-            std::cout << "please input the flv file path(local):";
-            std::string flv;
-            std::cin >> flv;
-            rtmp_video2(flv);
+            std::string mp4;
+            std::string rgba;
+            std::cout << "please input the mp4 file path(local):";
+            std::cin >> mp4;
+            std::cout << "please input the rgba file path(local):";
+            std::cin >> rgba;
+            encode_rgba(rgba, mp4);
             break;
         }
         default:
