@@ -265,19 +265,6 @@ extern "C"
             {
                 break;
             }
-            // AVRational time_base = istream->time_base;
-            // AVRational time_base_q = {1, AV_TIME_BASE};
-            // int64_t pts_time = av_rescale_q(pkt->pts, time_base, time_base_q);
-            // int64_t now_time = av_gettime() - start_time;
-            // if (pts_time > now_time)
-            //     av_usleep(pts_time - now_time);
-
-            // std::cout << "pts_time=" << pts_time << std::endl;
-            // std::cout << "pkt->dts=" << pkt->dts << std::endl;
-            // std::cout << "pkt->pts=" << pkt->pts << std::endl;
-            // std::cout << "av_gettime() - start_time=" << av_gettime() - start_time << std::endl;
-            // std::cout << "istream->time_base.den=" << istream->time_base.den << std::endl;
-            // std::cout << "istream->time_base.num=" << istream->time_base.num << std::endl;
         }
 
         encode(enc_ctx, opkt, NULL, ofmt_ctx, frame_index, f_out);

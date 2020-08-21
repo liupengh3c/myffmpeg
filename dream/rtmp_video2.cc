@@ -10,6 +10,39 @@ extern "C"
 #include "libswscale/swscale.h"
 
 #include <libavutil/imgutils.h>
+    static int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, AVFormatContext *fmt)
+    {
+        int ret = 0;
+
+        ret = avcodec_send_frame(enc_ctx, frame);
+        if (ret < 0)
+        {
+            std::cout << "avcodec_send_frame error,ret=" << ret << std::endl;
+            return -1;
+        }
+        while (ret >= 0)
+        {
+            ret = avcodec_receive_packet(enc_ctx, pkt);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            {
+                return 0;
+            }
+            else if (ret < 0)
+            {
+                std::cout << "avcodec_receive_packet error,ret=" << ret << std::endl;
+                return -2;
+            }
+            pkt->stream_index = 0;
+            std::cout << "pkt->pts = " << pkt->pts << std::endl;
+            ret = av_interleaved_write_frame(fmt, pkt);
+            av_packet_unref(pkt);
+            if (ret < 0)
+            {
+                std::cout << "av_interleaved_write_frame error,ret=" << ret << std::endl;
+            }
+        }
+        return 0;
+    }
     int captureFrame()
     {
         int ret = -1;
@@ -177,23 +210,10 @@ extern "C"
                 outFrame->data[2] = dst_data[0] + y_size * 5 / 4;
                 outFrame->pts = loop;
                 loop++;
-                printf("encoding frame %3d---------", loop);
-                avcodec_encode_video2(encodec_ctx, &outpkt, outFrame, &got_picture);
-                if (1 == got_picture)
-                {
-                    outpkt.stream_index = out_stream->index;
-                    av_interleaved_write_frame(outfmt_ctx, &outpkt);
-                    av_free_packet(&outpkt);
-                    printf("output frame %3d\n", loop - delayedFrame);
-                }
-                else
-                {
-                    delayedFrame++;
-                    printf("no output frame\n");
-                }
+                encode(encodec_ctx, &outpkt, outFrame, outfmt_ctx);
             }
-            av_packet_unref(&packet);
         }
+        encode(encodec_ctx, &outpkt, NULL, outfmt_ctx);
         av_write_trailer(outfmt_ctx);
         av_free(outFrame);
         av_free(picture_buf);
