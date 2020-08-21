@@ -138,10 +138,25 @@ extern "C"
         enc_ctx->qmin = 10;
         enc_ctx->qmax = 51;
         enc_ctx->max_b_frames = 0;
-        if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+        // 为输出文件分配avformat_context
+        avformat_alloc_output_context2(&ofmt_ctx, NULL, "flv", rtmp_server);
+        if (!ofmt_ctx)
         {
-            enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+            std::cout << "avformat_alloc_output_context2 for output file error,ret=" << std::endl;
+            return -4;
         }
+        // 打开输出文件
+        ret = avio_open(&ofmt_ctx->pb, rtmp_server, AVIO_FLAG_WRITE);
+        if (ret < 0)
+        {
+            std::cout << "open output file error,ret=" << ret << std::endl;
+            return -5;
+        }
+
+        std::cout << "-----------------------------------\n"
+                  << std::endl;
+        av_dump_format(ofmt_ctx, 0, rtmp_server, 1);
+
         // 5. 获取视频流索引
         for (size_t i = 0; i < ifmt_ctx->nb_streams; i++)
         {
@@ -169,24 +184,6 @@ extern "C"
             std::cout << "avcodec_open2 fail,ret=" << ret << std::endl;
             return -10;
         }
-        // 为输出文件分配avformat_context
-        avformat_alloc_output_context2(&ofmt_ctx, NULL, "flv", rtmp_server);
-        if (!ofmt_ctx)
-        {
-            std::cout << "avformat_alloc_output_context2 for output file error,ret=" << std::endl;
-            return -4;
-        }
-        // 打开输出文件
-        ret = avio_open(&ofmt_ctx->pb, rtmp_server, AVIO_FLAG_WRITE);
-        if (ret < 0)
-        {
-            std::cout << "open output file error,ret=" << ret << std::endl;
-            return -5;
-        }
-
-        std::cout << "-----------------------------------\n"
-                  << std::endl;
-        av_dump_format(ofmt_ctx, 0, rtmp_server, 1);
 
         // 写文件头
         ret = avformat_write_header(ofmt_ctx, NULL);
