@@ -17,6 +17,8 @@ extern "C"
     int video(std::string yuv);
     int rtmp_video(std::string flv);
     int encode_rgba(std::string input_file, std::string output_file);
+    int get_encode_video(std::string flv);
+    int rtmp_video2();
 #ifdef __cplusplus
 }
 #endif

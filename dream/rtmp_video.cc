@@ -42,15 +42,7 @@ extern "C"
                 std::cout << "avcodec_receive_packet error,ret=" << ret << std::endl;
                 return -2;
             }
-
-            // fwrite(pkt->data, 1, pkt->size, f);
-            // pkt->stream_index = 0;
-            pkt->pts = av_rescale_q(index, {1, 30}, ostream->time_base);
-            pkt->dts = pkt->pts;
-
-            std::cout << "index = " << fmt->streams[0]->codecpar->width << std::endl;
-            // std::cout << "ostream->time_base.den = " << ostream->time_base.den << std::endl;
-            // std::cout << "ostream->time_base.num = " << ostream->time_base.num << std::endl;
+            pkt->stream_index = 0;
             std::cout << "pkt->pts = " << pkt->pts << std::endl;
             ret = av_interleaved_write_frame(fmt, pkt);
             av_packet_unref(pkt);
@@ -80,12 +72,7 @@ extern "C"
         AVFrame *frame = NULL, *yuv_frame = NULL;
         struct SwsContext *sws_ctx = NULL;
         struct SDL_Info display;
-
-<<<<<<< HEAD
-        const char *rtmp_server = "rtmp://106.13..105.231:8144/live/movie";
-=======
-        const char *rtmp_server = "rtmp://106.13.105.231:8234/liupeng/video";
->>>>>>> ba24e5667f5bd8a441a907d3194702f25fac74e1
+        const char *rtmp_server = "rtmp://106.13.105.231:8144/live/rfBd56ti2SMtYvSgD5xAV0YU99zampta7Z7S575KLkIZ9PYk";
         AVCodecContext *enc_ctx = NULL;
         AVCodec *codec = NULL;
 
@@ -122,14 +109,6 @@ extern "C"
         }
         av_dump_format(ifmt_ctx, 0, "/dev/video0", 0);
 
-        // 为输出文件分配avformat_context
-        avformat_alloc_output_context2(&ofmt_ctx, NULL, "flv", rtmp_server);
-        if (!ofmt_ctx)
-        {
-            std::cout << "avformat_alloc_output_context2 for output file error,ret=" << std::endl;
-            return -4;
-        }
-
         codec = avcodec_find_encoder_by_name("h264_nvenc");
         if (!codec)
         {
@@ -152,23 +131,26 @@ extern "C"
         enc_ctx->bit_rate = 4000000;
         enc_ctx->width = 640;
         enc_ctx->height = 480;
-        enc_ctx->time_base = (AVRational){1, 30};
-        enc_ctx->gop_size = 12;
+        enc_ctx->time_base = (AVRational){1, 25};
+        enc_ctx->framerate = (AVRational){25, 1};
+        enc_ctx->gop_size = 10;
         enc_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
+        enc_ctx->qmin = 10;
+        enc_ctx->qmax = 51;
+        enc_ctx->max_b_frames = 0;
         if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
         {
             enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-            std::cout << "enter****************************" << std::endl;
         }
         // 5. 获取视频流索引
         for (size_t i = 0; i < ifmt_ctx->nb_streams; i++)
         {
-            istream = ifmt_ctx->streams[i];
             ostream = avformat_new_stream(ofmt_ctx, NULL);
             ostream->id = 0;
-            if (istream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+            if (ifmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 video_index = i;
+                istream = ifmt_ctx->streams[i];
                 ret = avcodec_parameters_from_context(ostream->codecpar, enc_ctx);
                 ostream->avg_frame_rate = AVRational{30, 1};
                 ostream->time_base = (AVRational){1, 30};
@@ -181,9 +163,6 @@ extern "C"
             std::cout << "can not find video index" << std::endl;
             return -9;
         }
-        std::cout << "-----------------------------------\n"
-                  << std::endl;
-        av_dump_format(ofmt_ctx, 0, rtmp_server, 1);
 
         // 8. 打开解码器
         ret = avcodec_open2(enc_ctx, codec, NULL);
@@ -192,6 +171,13 @@ extern "C"
             std::cout << "avcodec_open2 fail,ret=" << ret << std::endl;
             return -10;
         }
+        // 为输出文件分配avformat_context
+        avformat_alloc_output_context2(&ofmt_ctx, NULL, "flv", rtmp_server);
+        if (!ofmt_ctx)
+        {
+            std::cout << "avformat_alloc_output_context2 for output file error,ret=" << std::endl;
+            return -4;
+        }
         // 打开输出文件
         ret = avio_open(&ofmt_ctx->pb, rtmp_server, AVIO_FLAG_WRITE);
         if (ret < 0)
@@ -199,6 +185,10 @@ extern "C"
             std::cout << "open output file error,ret=" << ret << std::endl;
             return -5;
         }
+
+        std::cout << "-----------------------------------\n"
+                  << std::endl;
+        av_dump_format(ofmt_ctx, 0, rtmp_server, 1);
 
         // 写文件头
         ret = avformat_write_header(ofmt_ctx, NULL);
@@ -259,8 +249,8 @@ extern "C"
             memcpy(frame->data[0], pkt->data, pkt->size);
             sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height, yuv_frame->data, yuv_frame->linesize);
             yuv_frame->pts = av_rescale_q(pkt->pts, istream->time_base, ostream->time_base);
+            yuv_frame->pts = frame_index++;
             encode(enc_ctx, opkt, yuv_frame, ofmt_ctx, frame_index, f_out);
-            frame_index++;
             // 设置纹理数据
             SDL_UpdateYUVTexture(display.sdlTexture, &display.sdlRect,
                                  yuv_frame->data[0], yuv_frame->linesize[0],
@@ -271,7 +261,7 @@ extern "C"
             SDL_RenderCopy(display.sdlRenderer, display.sdlTexture, NULL, &display.sdlRect);
             // 显示
             SDL_RenderPresent(display.sdlRenderer);
-            if (av_gettime() - start_time >= 10000000)
+            if (av_gettime() - start_time >= 30000000)
             {
                 break;
             }

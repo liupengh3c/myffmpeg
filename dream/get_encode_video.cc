@@ -19,7 +19,7 @@ extern "C"
         SDL_Texture *sdlTexture;
         SDL_Rect sdlRect;
     };
-    AVStream *istream = NULL, *ostream = NULL;
+    AVStream *iStream = NULL, *oStream = NULL;
     static int encode(AVCodecContext *enc_ctx, AVPacket *pkt, AVFrame *frame, AVFormatContext *fmt, int index, FILE *f)
     {
         int ret = 0;
@@ -45,12 +45,12 @@ extern "C"
 
             // fwrite(pkt->data, 1, pkt->size, f);
             // pkt->stream_index = 0;
-            pkt->pts = av_rescale_q(index, {1, 30}, ostream->time_base);
+            pkt->pts = av_rescale_q(index, {1, 30}, oStream->time_base);
             pkt->dts = pkt->pts;
 
             std::cout << "index = " << fmt->streams[0]->codecpar->width << std::endl;
-            // std::cout << "ostream->time_base.den = " << ostream->time_base.den << std::endl;
-            // std::cout << "ostream->time_base.num = " << ostream->time_base.num << std::endl;
+            // std::cout << "oStream->time_base.den = " << oStream->time_base.den << std::endl;
+            // std::cout << "oStream->time_base.num = " << oStream->time_base.num << std::endl;
             std::cout << "pkt->pts = " << pkt->pts << std::endl;
             ret = av_interleaved_write_frame(fmt, pkt);
             av_packet_unref(pkt);
@@ -61,7 +61,7 @@ extern "C"
         }
         return 0;
     }
-    int rtmp_video(std::string flv)
+    int get_encode_video(std::string flv)
     {
         int ret = 0;
         int video_index = -1;
@@ -159,15 +159,15 @@ extern "C"
         // 5. 获取视频流索引
         for (size_t i = 0; i < ifmt_ctx->nb_streams; i++)
         {
-            istream = ifmt_ctx->streams[i];
-            ostream = avformat_new_stream(ofmt_ctx, NULL);
-            ostream->id = 0;
-            if (istream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+            iStream = ifmt_ctx->streams[i];
+            oStream = avformat_new_stream(ofmt_ctx, NULL);
+            oStream->id = 0;
+            if (iStream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 video_index = i;
-                ret = avcodec_parameters_from_context(ostream->codecpar, enc_ctx);
-                ostream->avg_frame_rate = AVRational{30, 1};
-                ostream->time_base = (AVRational){1, 30};
+                ret = avcodec_parameters_from_context(oStream->codecpar, enc_ctx);
+                oStream->avg_frame_rate = AVRational{30, 1};
+                oStream->time_base = (AVRational){1, 30};
                 break;
             }
         }
@@ -179,7 +179,7 @@ extern "C"
         }
         std::cout << "-----------------------------------\n"
                   << std::endl;
-        av_dump_format(ofmt_ctx, 0, rtmp_server, 1);
+        av_dump_format(ofmt_ctx, 0, h264, 1);
 
         // 8. 打开解码器
         ret = avcodec_open2(enc_ctx, codec, NULL);
@@ -189,7 +189,7 @@ extern "C"
             return -10;
         }
         // 打开输出文件
-        ret = avio_open(&ofmt_ctx->pb, rtmp_server, AVIO_FLAG_WRITE);
+        ret = avio_open(&ofmt_ctx->pb, h264, AVIO_FLAG_WRITE);
         if (ret < 0)
         {
             std::cout << "open output file error,ret=" << ret << std::endl;
@@ -204,7 +204,7 @@ extern "C"
             return -6;
         }
         // 9. 初始化转换器
-        sws_ctx = sws_getContext(istream->codecpar->width, istream->codecpar->height, AVPixelFormat(istream->codecpar->format), dst_width, dst_height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
+        sws_ctx = sws_getContext(iStream->codecpar->width, iStream->codecpar->height, AVPixelFormat(iStream->codecpar->format), dst_width, dst_height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
         if (!sws_ctx)
         {
             std::cout << "sws_getContext fail,ret=" << ret << std::endl;
@@ -216,9 +216,9 @@ extern "C"
         yuv_frame->format = AV_PIX_FMT_YUV420P;
         av_frame_get_buffer(yuv_frame, 0);
 
-        frame->width = istream->codecpar->width;
-        frame->height = istream->codecpar->height;
-        frame->format = istream->codecpar->format;
+        frame->width = iStream->codecpar->width;
+        frame->height = iStream->codecpar->height;
+        frame->format = iStream->codecpar->format;
         av_frame_get_buffer(frame, 0);
 
         // SDL初始化
@@ -254,7 +254,7 @@ extern "C"
             }
             memcpy(frame->data[0], pkt->data, pkt->size);
             sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height, yuv_frame->data, yuv_frame->linesize);
-            yuv_frame->pts = av_rescale_q(pkt->pts, istream->time_base, ostream->time_base);
+            yuv_frame->pts = av_rescale_q(pkt->pts, iStream->time_base, oStream->time_base);
             encode(enc_ctx, opkt, yuv_frame, ofmt_ctx, frame_index, f_out);
             frame_index++;
             // 设置纹理数据
@@ -271,7 +271,7 @@ extern "C"
             {
                 break;
             }
-            // AVRational time_base = istream->time_base;
+            // AVRational time_base = iStream->time_base;
             // AVRational time_base_q = {1, AV_TIME_BASE};
             // int64_t pts_time = av_rescale_q(pkt->pts, time_base, time_base_q);
             // int64_t now_time = av_gettime() - start_time;
@@ -282,8 +282,8 @@ extern "C"
             // std::cout << "pkt->dts=" << pkt->dts << std::endl;
             // std::cout << "pkt->pts=" << pkt->pts << std::endl;
             // std::cout << "av_gettime() - start_time=" << av_gettime() - start_time << std::endl;
-            // std::cout << "istream->time_base.den=" << istream->time_base.den << std::endl;
-            // std::cout << "istream->time_base.num=" << istream->time_base.num << std::endl;
+            // std::cout << "iStream->time_base.den=" << iStream->time_base.den << std::endl;
+            // std::cout << "iStream->time_base.num=" << iStream->time_base.num << std::endl;
         }
 
         encode(enc_ctx, opkt, NULL, ofmt_ctx, frame_index, f_out);

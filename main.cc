@@ -39,7 +39,9 @@ int main(int argc, char **argv)
         11. get webcam video to yuv420p.\n\
         12. get webcam video and push it to rtmp server.\n\
         13. encode rgba file to mp4.\n\
-        14. press 'q' for quit applation.\n";
+        14. get webcam video and encode to h264.\n\
+        15. get webcam video and push it to rtmp server(demo).\n\
+        16. press 'q' for quit applation.\n";
     // av_log_set_level(AV_LOG_TRACE);
     while (true)
     {
@@ -191,6 +193,19 @@ int main(int argc, char **argv)
             std::cout << "please input the rgba file path(local):";
             std::cin >> rgba;
             encode_rgba(rgba, mp4);
+            break;
+        }
+        case 14:
+        {
+            std::string h264;
+            std::cout << "please input the h264 file path(local):";
+            std::cin >> h264;
+            get_encode_video(h264);
+            break;
+        }
+        case 15:
+        {
+            rtmp_video2();
             break;
         }
         default:
