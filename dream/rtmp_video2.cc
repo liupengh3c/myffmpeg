@@ -183,8 +183,7 @@ extern "C"
 
         AVFrame *outFrame = av_frame_alloc();
         int picture_size = avpicture_get_size(encodec_ctx->pix_fmt, encodec_ctx->width, encodec_ctx->height);
-        // unsigned char *picture_buf = (uint8_t *)av_malloc(picture_size);
-        // avpicture_fill((AVPicture *)outFrame, picture_buf, encodec_ctx->pix_fmt, encodec_ctx->width, encodec_ctx->height);
+
         outFrame->format = encodec_ctx->pix_fmt;
         outFrame->width = encodec_ctx->width;
         outFrame->height = encodec_ctx->height;
@@ -214,7 +213,6 @@ extern "C"
         encode(encodec_ctx, &outpkt, NULL, outfmt_ctx);
         av_write_trailer(outfmt_ctx);
         av_free(outFrame);
-        // av_free(picture_buf);
         avio_close(outfmt_ctx->pb);
         avformat_close_input(&infmt_ctx);
         avformat_close_input(&outfmt_ctx);
