@@ -145,15 +145,13 @@ extern "C"
         // 5. 获取视频流索引
         for (size_t i = 0; i < ifmt_ctx->nb_streams; i++)
         {
-            ostream = avformat_new_stream(ofmt_ctx, enc_ctx->codec);
+            ostream = avformat_new_stream(ofmt_ctx, NULL);
             ostream->id = 0;
             if (ifmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 video_index = i;
                 istream = ifmt_ctx->streams[i];
                 ret = avcodec_parameters_from_context(ostream->codecpar, enc_ctx);
-                ostream->avg_frame_rate = AVRational{30, 1};
-                ostream->time_base = (AVRational){1, 30};
                 break;
             }
         }

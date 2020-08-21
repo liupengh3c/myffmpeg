@@ -145,7 +145,7 @@ extern "C"
             return -8;
         }
 
-        AVStream *out_stream = avformat_new_stream(outfmt_ctx, encodec_ctx->codec);
+        AVStream *out_stream = avformat_new_stream(outfmt_ctx, NULL);
         if (!out_stream)
         {
             printf("failed new stream\n");
