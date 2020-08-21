@@ -53,7 +53,8 @@ extern "C"
         AVFormatContext *outfmt_ctx = NULL;
 
         AVPacket packet;
-        av_init_packet(&packet);
+        AVPacket outpkt;
+
         packet.data = NULL;
         packet.size = 0;
 
@@ -63,6 +64,8 @@ extern "C"
         int dst_linesize[4];
 
         const char *rtmp_addr = "rtmp://106.13.105.231:8144/live/rfBd56ti2SMtYvSgD5xAV0YU99zampta7Z7S575KLkIZ9PYk";
+
+        av_init_packet(&packet);
 
         ifmt = av_find_input_format("video4linux2");
         if (!ifmt)
@@ -111,8 +114,7 @@ extern "C"
             avformat_close_input(&infmt_ctx);
             return -6;
         }
-        int num; ///< Numerator
-        int den; ///< Denominator
+
         encodec_ctx->bit_rate = 400000;
         encodec_ctx->width = 640;
         encodec_ctx->height = 480;
@@ -136,10 +138,6 @@ extern "C"
             return -7;
         }
 
-        //END编码器
-
-        //输出文件
-
         if (0 > avformat_alloc_output_context2(&outfmt_ctx, nullptr, "flv", rtmp_addr))
         {
             printf("failed alloc output context\n");
@@ -155,8 +153,8 @@ extern "C"
             avformat_close_input(&outfmt_ctx);
             return -9;
         }
-        avcodec_copy_context(out_stream->codec, encodec_ctx);
-        //out_stream->codecpar->codec_tag = 0;
+        // avcodec_copy_context(out_stream->codec, encodec_ctx);
+        avcodec_parameters_from_context(out_stream->codecpar, encodec_ctx);
         if (0 > avio_open(&outfmt_ctx->pb, rtmp_addr, AVIO_FLAG_WRITE))
         {
             printf("failed to open outfile\n");
@@ -185,14 +183,14 @@ extern "C"
 
         AVFrame *outFrame = av_frame_alloc();
         int picture_size = avpicture_get_size(encodec_ctx->pix_fmt, encodec_ctx->width, encodec_ctx->height);
-        unsigned char *picture_buf = (uint8_t *)av_malloc(picture_size);
-        avpicture_fill((AVPicture *)outFrame, picture_buf, encodec_ctx->pix_fmt, encodec_ctx->width, encodec_ctx->height);
+        // unsigned char *picture_buf = (uint8_t *)av_malloc(picture_size);
+        // avpicture_fill((AVPicture *)outFrame, picture_buf, encodec_ctx->pix_fmt, encodec_ctx->width, encodec_ctx->height);
         outFrame->format = encodec_ctx->pix_fmt;
         outFrame->width = encodec_ctx->width;
         outFrame->height = encodec_ctx->height;
-
+        av_frame_get_buffer(outFrame, 0);
         int y_size = encodec_ctx->width * encodec_ctx->height;
-        AVPacket outpkt;
+
         av_new_packet(&outpkt, picture_size);
 
         int loop = 0;
@@ -216,7 +214,7 @@ extern "C"
         encode(encodec_ctx, &outpkt, NULL, outfmt_ctx);
         av_write_trailer(outfmt_ctx);
         av_free(outFrame);
-        av_free(picture_buf);
+        // av_free(picture_buf);
         avio_close(outfmt_ctx->pb);
         avformat_close_input(&infmt_ctx);
         avformat_close_input(&outfmt_ctx);

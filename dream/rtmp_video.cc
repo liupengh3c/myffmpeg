@@ -145,7 +145,7 @@ extern "C"
         // 5. 获取视频流索引
         for (size_t i = 0; i < ifmt_ctx->nb_streams; i++)
         {
-            ostream = avformat_new_stream(ofmt_ctx, NULL);
+            ostream = avformat_new_stream(ofmt_ctx, enc_ctx->codec);
             ostream->id = 0;
             if (ifmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
