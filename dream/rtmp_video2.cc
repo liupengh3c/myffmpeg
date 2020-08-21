@@ -183,16 +183,14 @@ extern "C"
         int dst_bufsize = av_image_alloc(dst_data, dst_linesize, 640, 480, AV_PIX_FMT_YUV420P, 1);
 
         AVFrame *outFrame = av_frame_alloc();
-        // int picture_size = avpicture_get_size(encodec_ctx->pix_fmt, encodec_ctx->width, encodec_ctx->height);
         int picture_size = av_image_get_buffer_size(encodec_ctx->pix_fmt, encodec_ctx->width, encodec_ctx->height, 0);
 
         outFrame->format = encodec_ctx->pix_fmt;
         outFrame->width = encodec_ctx->width;
         outFrame->height = encodec_ctx->height;
         av_frame_get_buffer(outFrame, 0);
-        int y_size = encodec_ctx->width * encodec_ctx->height;
 
-        // av_new_packet(&outpkt, picture_size);
+        av_new_packet(&outpkt, picture_size);
 
         int loop = 0;
         int got_picture = -1;
@@ -205,8 +203,8 @@ extern "C"
                 memcpy(src_data[0], packet.data, packet.size);
                 sws_scale(sws_ctx, src_data, src_linesize, 0, infmt_ctx->streams[stream_index]->codecpar->height, dst_data, dst_linesize);
                 outFrame->data[0] = dst_data[0];
-                outFrame->data[1] = dst_data[0] + y_size;
-                outFrame->data[2] = dst_data[0] + y_size * 5 / 4;
+                outFrame->data[1] = dst_data[0] + encodec_ctx->width * encodec_ctx->height;
+                outFrame->data[2] = dst_data[0] + encodec_ctx->width * encodec_ctx->height * 5 / 4;
                 outFrame->pts = loop;
                 loop++;
                 encode(encodec_ctx, &outpkt, outFrame, outfmt_ctx);
