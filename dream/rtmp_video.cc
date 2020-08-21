@@ -131,8 +131,8 @@ extern "C"
         enc_ctx->bit_rate = 4000000;
         enc_ctx->width = 640;
         enc_ctx->height = 480;
-        enc_ctx->time_base = (AVRational){1, 25};
-        enc_ctx->framerate = (AVRational){25, 1};
+        enc_ctx->time_base = (AVRational){1, 30};
+        enc_ctx->framerate = (AVRational){30, 1};
         enc_ctx->gop_size = 10;
         enc_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
         enc_ctx->qmin = 10;
@@ -246,7 +246,7 @@ extern "C"
             }
             memcpy(frame->data[0], pkt->data, pkt->size);
             sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height, yuv_frame->data, yuv_frame->linesize);
-            yuv_frame->pts = av_rescale_q(pkt->pts, istream->time_base, ostream->time_base);
+            // yuv_frame->pts = av_rescale_q(pkt->pts, istream->time_base, ostream->time_base);
             yuv_frame->pts = frame_index++;
             encode(enc_ctx, opkt, yuv_frame, ofmt_ctx, frame_index, f_out);
             // 设置纹理数据

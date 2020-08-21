@@ -66,6 +66,7 @@ extern "C"
         const char *rtmp_addr = "rtmp://106.13.105.231:8144/live/rfBd56ti2SMtYvSgD5xAV0YU99zampta7Z7S575KLkIZ9PYk";
 
         av_init_packet(&packet);
+        av_init_packet(&outpkt);
 
         ifmt = av_find_input_format("video4linux2");
         if (!ifmt)
@@ -190,7 +191,7 @@ extern "C"
         av_frame_get_buffer(outFrame, 0);
         int y_size = encodec_ctx->width * encodec_ctx->height;
 
-        av_new_packet(&outpkt, picture_size);
+        // av_new_packet(&outpkt, picture_size);
 
         int loop = 0;
         int got_picture = -1;
