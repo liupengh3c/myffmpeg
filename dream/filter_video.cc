@@ -157,13 +157,13 @@ extern "C"
         return ret;
     }
 
-    int filter_video(char *in_yuv, char *out_yuv)
+    int filter_video(std::string in_yuv, std::string out_yuv)
     {
         int ret;
         AVPacket packet;
         AVFrame *frame;
         AVFrame *filt_frame;
-        FILE *f = fopen(out_yuv, "rb");
+        FILE *f = fopen(out_yuv.data(), "rb");
 
         frame = av_frame_alloc();
         filt_frame = av_frame_alloc();
@@ -173,7 +173,7 @@ extern "C"
             exit(1);
         }
 
-        if ((ret = open_input_file(in_yuv)) < 0)
+        if ((ret = open_input_file(in_yuv.data())) < 0)
             goto end;
         if ((ret = init_filters(filter_descr)) < 0)
             goto end;
