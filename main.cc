@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 
             std::cout << "please input output yuv file path:";
             std::cin >> out;
-            filter_video(in, out;
+            filter_video(in, out);
             break;
         }
         default:
