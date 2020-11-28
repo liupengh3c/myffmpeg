@@ -21,6 +21,7 @@ extern "C"
             std::cout << "error sending a packet for decoding." << std::endl;
             return -1;
         }
+        av_packet_unref(pkt);
         while (ret >= 0)
         {
             ret = avcodec_receive_frame(dec_ctx, frame);

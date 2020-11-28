@@ -27,6 +27,7 @@ extern "C"
             {
                 return -2;
             }
+            av_packet_unref(pkt);
             // 写Y分量
             for (size_t i = 0; i < frame->height; i++)
             {
@@ -121,13 +122,14 @@ extern "C"
             if (ifmt_ctx->streams[pkt->stream_index]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 ret = decode(codec_ctx, pkt, frame, f_out);
-                av_packet_unref(pkt);
                 if (ret < 0)
                 {
                     break;
                 }
             }
         }
+        /* flush the decoder */
+        decode(codec_ctx, NULL, frame, f_out);
         std::cout << "decoded success-------" << std::endl;
 
         avcodec_free_context(&codec_ctx);

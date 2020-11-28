@@ -21,6 +21,13 @@ All the funtions are:
 	8. encode yuv420p to h264(fwrite).  
 	9. encode yuv420p to h264(av_interleaved_write_frame).  
 	10. encode pcm to aac.  
-        11. press 'q' for quit applation.  
+	11. get webcam video to yuv420p.  
+    12. press 'q' for quit applation.  
 
 please select the number:  
+
+# rtmp server
+搭建了rtmp server服务  
+地址：rtmp://106.13.105.231:8234/xxxx/xxxx(xxx随意替换)  
+可以通过：http://106.13.105.231:8000/admin/streams## 这个地址查看所有的推流
+
